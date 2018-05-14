@@ -35,7 +35,7 @@ cv en mailingtopic
 
 ## Usage
 
-Create a location type for the $MAILING_TOPIC.  Include `[$MAILING_TOPIC]` in the email subject to use the mailing topic email address instead of primary or bulk.
+Create a location type for the `Mailing Topic`.  Include `[Mailing Topic]` in the email subject to use the mailing topic email address instead of primary or bulk.
 
 ## Known Issues
 
