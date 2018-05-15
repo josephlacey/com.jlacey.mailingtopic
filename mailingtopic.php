@@ -157,12 +157,13 @@ function mailingtopic_civicrm_alterMailParams(&$params, $context) {
       //CRM_Core_Error::debug_var('mailing_topic_id', $mailing_topic_id);
       //If a mailing topic exists, see if contact has a relevant 
       if ($mailing_topic_id !== FALSE) {
-        $default_email = civicrm_api3('Email', 'get', array('sequential' => 1, 'email' => $params['toEmail'],));
+        $default_email = civicrm_api3('Email', 'get', array('sequential' => 1, 'email' => $params['toEmail'], 'is_primary' => 1));
+        //CRM_Core_Error::debug_var('default_email', $default_email);        
         //Don't change if the topic is already selected as primary
         if ($mailling_topic_id != $default_email['values'][0]['location_type_id']) {
           $mailing_topic_email = civicrm_api3('Email', 'get', array(
             'sequential' => 1,
-            'contact_id' => $default_email['contact_id'],
+            'contact_id' => $default_email['values'][0]['contact_id'],
             'location_type_id' => $locationTypes[$mailing_topic_id],
           ));
           //CRM_Core_Error::debug_var('mailing_topic_email', $mailing_topic_email);
