@@ -148,6 +148,13 @@ function mailingtopic_civicrm_alterMailParams(&$params, $context) {
   //TODO Do we need to drop the [topic]?
   preg_match_all('#\[(.*?)\]#', $params['Subject'], $match);
   //CRM_Core_Error::debug_var('match', $match);
+
+  //Remove Mailing Topics from outgoing subject
+  foreach($match[0] as $mailing_topic_subject) {
+    if ($mailing_topic_subject != '[CiviMail Draft]') {
+      $params['Subject'] = str_replace($mailing_topic_subject, '', $params['Subject']);
+    }
+  }
   
   //Change the email address for each mailing topic
   foreach($match[1] as $mailing_topic_name) {
@@ -158,7 +165,7 @@ function mailingtopic_civicrm_alterMailParams(&$params, $context) {
       //If a mailing topic exists, see if contact has a relevant 
       if ($mailing_topic_id !== FALSE) {
         $default_email = civicrm_api3('Email', 'get', array('sequential' => 1, 'email' => $params['toEmail'], 'is_primary' => 1));
-        //CRM_Core_Error::debug_var('default_email', $default_email);        
+        //CRM_Core_Error::debug_var('default_email', $default_email);
         //Don't change if the topic is already selected as primary
         if ($mailling_topic_id != $default_email['values'][0]['location_type_id']) {
           $mailing_topic_email = civicrm_api3('Email', 'get', array(
