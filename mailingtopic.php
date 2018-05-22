@@ -142,41 +142,35 @@ function mailingtopic_civicrm_entityTypes(&$entityTypes) {
  */
 function mailingtopic_civicrm_alterMailParams(&$params, $context) {
   //Get all current location types
-  $locationTypes = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id', array('labelColumn' => 'display_name'));
-
-  //find all the mailing topics
-  //TODO Do we need to drop the [topic]?
+  $locationTypes = CRM_Core_PseudoConstant::get(
+    'CRM_Core_DAO_Address',
+    'location_type_id',
+    array('labelColumn' => 'display_name'
+  ));
+  //Find potential mailing topics
   preg_match_all('#\[(.*?)\]#', $params['Subject'], $match);
-  //CRM_Core_Error::debug_var('match', $match);
-
-  //Remove Mailing Topics from outgoing subject
-  foreach($match[0] as $mailing_topic_subject) {
-    if ($mailing_topic_subject != '[CiviMail Draft]') {
-      $params['Subject'] = str_replace($mailing_topic_subject, '', $params['Subject']);
-    }
-  }
-  
-  //Change the email address for each mailing topic
-  foreach($match[1] as $mailing_topic_name) {
-    //Exclude CiviMail Draft due to syntax
-    if ($mailing_topic_name != 'CiviMail Draft') {
-      $mailing_topic_id = array_search($mailing_topic_name, $locationTypes);
-      //CRM_Core_Error::debug_var('mailing_topic_id', $mailing_topic_id);
-      //If a mailing topic exists, see if contact has a relevant 
-      if ($mailing_topic_id !== FALSE) {
-        $default_email = civicrm_api3('Email', 'get', array('sequential' => 1, 'email' => $params['toEmail'], 'is_primary' => 1));
-        //CRM_Core_Error::debug_var('default_email', $default_email);
-        //Don't change if the topic is already selected as primary
-        if ($mailling_topic_id != $default_email['values'][0]['location_type_id']) {
-          $mailing_topic_email = civicrm_api3('Email', 'get', array(
-            'sequential' => 1,
-            'contact_id' => $default_email['values'][0]['contact_id'],
-            'location_type_id' => $locationTypes[$mailing_topic_id],
-          ));
-          //CRM_Core_Error::debug_var('mailing_topic_email', $mailing_topic_email);
-          if ($mailing_topic_email['count'] == 1) {
-            $params['toEmail'] = $mailing_topic_email['values'][0]['email'];
-          }
+  //Process the mailing topic
+  foreach($match[1] as $key => $mailing_topic_name) {
+    //Check if match is a mailing topic
+    if ($mailing_topic_id = array_search($mailing_topic_name, $locationTypes)) {
+      //Remove mailing topic from outgoing subject
+      $params['Subject'] = str_replace($match[0][$key], '', $params['Subject']);
+      //If a mailing topic exists, see if the contact has a relevant email
+      $default_email = civicrm_api3('Email', 'get', array(
+        'sequential' => 1,
+        'email' => $params['toEmail'],
+        'is_primary' => 1
+      ));
+      //Don't change if the mailing topic email is already selected as primary
+      if ($mailling_topic_id != $default_email['values'][0]['location_type_id']) {
+        $mailing_topic_email = civicrm_api3('Email', 'get', array(
+          'sequential' => 1,
+          'contact_id' => $default_email['values'][0]['contact_id'],
+          'location_type_id' => $locationTypes[$mailing_topic_id],
+        ));
+        //Change email address if it exists
+        if ($mailing_topic_email['count'] == 1) {
+          $params['toEmail'] = $mailing_topic_email['values'][0]['email'];
         }
       }
     }
